@@ -7,11 +7,12 @@ last = samples;
 
 apogee = 1000; %(m) Divide by  3.281 for feet
 %Select either to have the chute deploy at either a certain height or
-%time after apogee, leave the other value blank
-mainDeployTime = duration+1;
-mainDeployHeight = 200;
-drougeDeployTime = duration+1;
-drougeDeployHeight = 900;
+%time after apogee, if using height, set time to duration+1, if using
+%time, set height to 0
+mainDeployTime = 30;
+mainDeployHeight = 0;
+drougeDeployTime = 10;
+drougeDeployHeight = 0;
 
 %Drag data for the rocket, drouge and main chute
 %Data from OpenRocket
@@ -62,19 +63,19 @@ data=data(1:last-1,:);
 
 %Report the data
 fprintf("Total descent time: %.1f s\n", last*timeInterval)
-fprintf("Max Acceleration: %.2f m s^-2\n", max(data(:,2)))
+fprintf("Max Acceleration: %.2f m s^-2, %2f g\n", max(data(:,2)),max(data(:,2))/g)
 fprintf("Landing Speed: %.2f m s^-1", abs(data(end,3)))
 %graph the data
 tiledlayout(2,1)
 nexttile
 plot(data(2:end,1),data(2:end,v))
 title("Velocity")
-ylabel("Velocity (m/s)")
+ylabel("Velocity (m s^2)")
 xlabel("Time (s)")
 nexttile
 plot(data(2:end,1),data(2:end,a))
 title("Acceleration")
-ylabel("Acceleration (m/s/s)")
+ylabel("Acceleration (m s^2)")
 xlabel("Time (s)")
 
 
