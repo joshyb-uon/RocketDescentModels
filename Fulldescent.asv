@@ -1,0 +1,79 @@
+%Setup paramaters
+%All units are SI (NO FEET!)
+samples = 1e6; %number of diecreet time steps
+duration = 100; %(s) duration of the simulation, needs a abtter way to find this time
+timeInterval = duration/samples;
+last = samples;
+
+apogee = 1000; %(m) Divide by  3.281 for feet
+%Select either to have the chute deploy at either a certain height or
+%time after apogee, leave the other value blank
+mainDeployTime = duration+1;
+mainDeployHeight = 200;
+drougeDeployTime = duration+1;
+drougeDeployHeight = 900;
+
+%Drag data for the rocket, drouge and main chute
+%Data from OpenRocket
+rocketCd = 0.44;
+rocketA = 9.67e-3;
+mainCd = 0.75;
+mainA = 1.27^2/4*pi;
+drougeCd = 0.75;
+drougeA = 0.46^2/4*pi;
+mass = 3;
+
+%Enviromental data
+g = -9.8;
+rho = 1.225;
+
+%%Build data tablet = 1
+t = 1;
+v = 3;
+a = 2;
+alt = 4
+f = 5;
+d=6
+data = zeros(samples,7);
+data(:,t)=linspace(0,duration,samples);
+data(1,2:4) = [g 0 apogee];
+
+
+for iteration = 2:samples
+    time = data(iteration,t);
+    vLast = data(iteration-1,v);
+    aLast = data(iteration-1,a);
+    altLast = data(iteration-1,alt);
+    mainFlag = mainDeployTime<time | mainDeployHeight>altLast;
+    drougeFlag = drougeDeployTime<time | drougeDeployHeight>altLast;
+    vel = data(iteration-1,a)*timeInterval+vLast;
+    drag = 0.5*vel^2*rho*(rocketA*rocketCd+mainCd*mainA*mainFlag+drougeCd*drougeA*drougeFlag);
+    force = drag+mass*g;
+    accel = force/mass;
+    alti=altLast+vel*timeInterval;
+    data(iteration,2:6)=[accel vel alti force drag];
+    if alti<=0
+        last = iteration
+        data(iteration:end,:)=0;
+        break
+    end
+end
+data=data(1:last-1,:);
+
+%Report the data
+fprintf("Total descent time: %d s", 
+
+%graph the data
+tiledlayout(2,1)
+nexttile
+plot(data(2:end,1),data(2:end,v))
+title("Velocity")
+ylabel("Velocity (m/s)")
+xlabel("Time (s)")
+nexttile
+plot(data(2:end,1),data(2:end,a))
+title("Acceleration")
+ylabel("Acceleration (m/s/s)")
+xlabel("Time (s)")
+
+
